@@ -1,0 +1,24 @@
+name: Sync to HuggingFace Space
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global credential.helper store
+          echo "https://Ein05:$HF_TOKEN@huggingface.co" > ~/.git-credentials
+          git remote add space https://Ein05:$HF_TOKEN@huggingface.co/spaces/Ein05/zero-shot-cad-detector || true
+          git push space main --force
