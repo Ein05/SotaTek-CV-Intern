@@ -1,3 +1,31 @@
+# ── Monkeypatch to fix a known bug in gradio_client with Pydantic v2 ──────────
+try:
+    import gradio_client.utils
+    orig_json_schema_to_python_type = getattr(gradio_client.utils, "_json_schema_to_python_type", None)
+    orig_get_type = getattr(gradio_client.utils, "get_type", None)
+
+    def patched_json_schema_to_python_type(schema, defs=None):
+        if isinstance(schema, bool):
+            return "any"
+        if orig_json_schema_to_python_type:
+            return orig_json_schema_to_python_type(schema, defs)
+        return "any"
+
+    def patched_get_type(schema):
+        if isinstance(schema, bool):
+            return "any"
+        if orig_get_type:
+            return orig_get_type(schema)
+        return "any"
+
+    if hasattr(gradio_client.utils, "_json_schema_to_python_type"):
+        gradio_client.utils._json_schema_to_python_type = patched_json_schema_to_python_type
+    if hasattr(gradio_client.utils, "get_type"):
+        gradio_client.utils.get_type = patched_get_type
+except Exception:
+    pass
+# ─────────────────────────────────────────────────────────────────────────────
+
 import gradio as gr
 import cv2
 import numpy as np
