@@ -2,9 +2,9 @@
 title: Zero-Shot CAD Pattern Detector
 colorFrom: cyan
 colorTo: blue
-sdk: streamlit
-sdk_version: 1.35.0
-app_file: app.py
+sdk: gradio
+sdk_version: 4.44.0
+app_file: gradio_app.py
 pinned: false
 ---
 
@@ -28,12 +28,12 @@ pinned: false
    pip install -r requirements.txt
    ```
 
-2. Khởi chạy ứng dụng Streamlit:
+2. Khởi chạy ứng dụng Gradio:
    ```bash
-   streamlit run app.py
+   python gradio_app.py
    ```
 
-3. Mở trình duyệt tại địa chỉ `http://localhost:8501`.
+3. Mở trình duyệt tại địa chỉ `http://localhost:7860`.
 
 ## Chạy thử nghiệm xác minh cục bộ
 
