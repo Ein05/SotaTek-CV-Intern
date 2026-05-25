@@ -24,39 +24,41 @@ pinned: false
 
 ---
 
-## 🧩 Thuật Toán Hoạt Động Như Thế Nào? (Giải thích siêu dễ hiểu! 🐣)
+## 🔬 Quy Trình Xử Lý Thuật Toán (Pipeline Kiến Trúc)
 
-Hãy tưởng tượng bạn đang chơi trò **"Đi tìm ẩn số"** (Where's Wally?) trên một bức tranh khổng lồ. Thay vì tìm người, chúng ta cần tìm các **ký hiệu điện tí hon** (như Cầu chì 🔌, Điện trở ⬛, Điốt 🔺). 
-
-Hệ thống AI tí hon này tự học và làm việc qua **4 bước phiêu lưu** siêu ngầu sau:
+Hệ thống sử dụng phương pháp khớp mẫu đa quy mô (Multi-scale Template Matching) kết hợp với các bộ lọc hình thái học và hình học để phát hiện ký hiệu dạng Zero-Shot. Quy trình xử lý gồm 4 giai đoạn chính:
 
 ```mermaid
 graph TD
-    A["📷 1. Nhận Bản Đồ & Ảnh Mẫu"] --> B["🧹 2. Quét Sạch Bụi Bẩn (Lọc Nhiễu)"]
-    B --> C["🔍 3. Thu Nhỏ - Phóng To & Xoay Ảnh Mẫu"]
-    C --> D["🎯 4. Đóng Dấu Kết Quả Chính Xác"]
+    A["📷 1. Tiền xử lý & Binarization ảnh đầu vào"] --> B["🧹 2. Phân tích Thành phần Liên thông (Connected Components) & Lọc nhiễu"]
+    B --> C["🔍 3. Xây dựng Không gian Quy mô & Góc xoay (Scale-Rotation Pyramid)"]
+    C --> D["🎯 4. Khớp mẫu thu nhỏ (Coarse Match) & Hợp nhất cục bộ (NMS)"]
     
-    style A fill:#FFD700,stroke:#333,stroke-width:2px
-    style B fill:#FF6B6B,stroke:#333,stroke-width:2px
-    style C fill:#4D96FF,stroke:#333,stroke-width:2px
-    style D fill:#6BCB77,stroke:#333,stroke-width:2px
+    style A fill:#ECEFF1,stroke:#37474F,stroke-width:2px
+    style B fill:#ECEFF1,stroke:#37474F,stroke-width:2px
+    style C fill:#ECEFF1,stroke:#37474F,stroke-width:2px
+    style D fill:#ECEFF1,stroke:#37474F,stroke-width:2px
 ```
 
-### 🎬 Bước 1: Xem mặt "Kẻ trốn tìm" (Nhận ảnh đầu vào)
-* Bạn đưa cho máy tính một **Bản đồ khổng lồ** (Ảnh bản vẽ kỹ thuật) và **Ảnh chân dung kẻ trốn tìm** (Ký hiệu mẫu).
+### Giai đoạn 1: Tiền xử lý & Nhị phân hóa (Binarization)
+* Trích xuất kênh màu xám từ ảnh bản vẽ kỹ thuật (Drawing) và ảnh ký hiệu mẫu (Template).
+* Thực hiện thuật toán ngưỡng động (Adaptive Thresholding) hoặc ngưỡng tĩnh để chuyển đổi ảnh sang dạng nhị phân, phân tách rõ nét giữa các nét vẽ ký hiệu (foreground) và nền bản vẽ (background).
 
-### 🧹 Bước 2: Dọn dẹp nhà cửa (Lọc chữ viết & Khung vẽ)
-* Bản vẽ có rất nhiều chữ viết rối mắt và các bảng thông tin góc phải. 
-* Máy tính sẽ dùng một chiếc **chổi thần kỳ** để tạm thời quét sạch các chữ viết và đường kẻ thừa đi, chỉ giữ lại các ký hiệu để tìm kiếm dễ hơn.
+### Giai đoạn 2: Phân tích Connected Components (CC) & Lọc nhiễu thông tin
+* Trích xuất các thành phần liên thông trên ảnh nhị phân để phân tích thuộc tính hình học (chiều cao, chiều rộng, diện tích pixel).
+* **Bộ lọc văn bản**: Loại bỏ các đối tượng liên thông có kích thước tương đồng với ký tự văn bản hoặc nhiễu hạt nhỏ.
+* **Bộ lọc BOM (Bill of Materials)**: Giới hạn tọa độ tìm kiếm $x < 1050$ để loại bỏ vùng nhiễu gây ra bởi lưới bảng biểu thống kê vật tư ở góc phải bản vẽ.
 
-### 🔍 Bước 3: Thu nhỏ - Phóng to & Xoay vòng tròn
-* Kẻ trốn tìm trên bản đồ có thể đang **nằm ngửa**, **nằm nghiêng** (quay góc 90°, 180°, 270°) hoặc **to nhỏ khác nhau**.
-* Máy tính sẽ tự động **nhân bản** ảnh mẫu thành hàng chục phiên bản khác nhau: xoay đủ hướng và phóng to thu nhỏ đủ kích cỡ để mang đi so khớp.
+### Giai đoạn 3: Thiết lập Không gian Quy mô & Góc xoay (Pyramid Search)
+* Do ký hiệu trên thực tế có thể thay đổi kích thước và hướng xoay so với ảnh mẫu mẫu:
+  * Tạo một kim tự tháp ảnh mẫu (Template Pyramid) bằng cách thay đổi kích thước mẫu dựa trên dải tham số tỷ lệ đầu vào (Scale Space, ví dụ: $0.08, 0.1, 0.12$).
+  * Với mỗi tỷ lệ, tiến hành xoay mẫu theo danh sách các góc xoay chỉ định (ví dụ: $0^\circ, 90^\circ, 180^\circ, 270^\circ$).
 
-### 🎯 Bước 4: Đóng dấu "Tìm thấy rồi!"
-* Máy tính cầm các tấm ảnh mẫu đã xoay/phóng to đi quét khắp bản vẽ (như cầm kính lúp dò từng ô).
-* Ở những nơi có hình dáng khớp nhất, máy tính sẽ vẽ một **khung hình chữ nhật màu đỏ** rực rỡ và ghi điểm số tự tin! 
-* Kết quả cuối cùng sẽ xuất ra một danh sách tọa độ (JSON) vô cùng ngăn nắp.
+### Giai đoạn 4: So khớp Mẫu & Hợp nhất Bounding Box (Non-Maximum Suppression - NMS)
+* Chạy thuật toán khớp mẫu chuẩn hóa (Normalized Cross-Correlation - NCC) trên ảnh đã lọc nhiễu để tính toán bản đồ mật độ xác suất (Similarity Map).
+* Áp dụng ngưỡng coarse-matching ($TM\_Thresh$) để trích xuất các tọa độ ứng viên sơ bộ.
+* Tính toán chỉ số Recall cục bộ (độ trùng khớp đường nét chi tiết) để đánh giá độ tin cậy của ứng viên.
+* Áp dụng thuật toán Non-Maximum Suppression (NMS) để hợp nhất các ô định vị trùng lặp, giữ lại các ô có độ tự tin cao nhất và xuất kết quả tọa độ dưới định dạng JSON chuẩn.
 
 ---
 
