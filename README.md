@@ -1,6 +1,6 @@
 ---
 title: Zero-Shot CAD Pattern Detector
-colorFrom: cyan
+colorFrom: green
 colorTo: blue
 sdk: gradio
 sdk_version: 4.44.0
