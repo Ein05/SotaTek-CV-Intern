@@ -3,7 +3,7 @@ title: Zero-Shot CAD Pattern Detector
 colorFrom: green
 colorTo: blue
 sdk: gradio
-sdk_version: 5.16.0
+sdk_version: 4.44.1
 python_version: "3.10"
 app_file: gradio_app.py
 pinned: false
