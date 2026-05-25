@@ -1,6 +1,5 @@
 ---
 title: Zero-Shot CAD Pattern Detector
-emoji: 🎯
 colorFrom: cyan
 colorTo: blue
 sdk: streamlit
