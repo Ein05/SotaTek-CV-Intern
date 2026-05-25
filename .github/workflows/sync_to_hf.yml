@@ -18,7 +18,17 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
           git config --global credential.helper store
           echo "https://Ein05:$HF_TOKEN@huggingface.co" > ~/.git-credentials
+          
+          # Tạo nhánh mồ côi (không chứa lịch sử các commit cũ có file nhị phân)
+          git checkout --orphan hf-space
+          git add --renormalize .
+          git commit -m "Deploy to Hugging Face Spaces"
+          
+          # Đẩy nhánh này làm nhánh main của Hugging Face Space
           git remote add space https://Ein05:$HF_TOKEN@huggingface.co/spaces/Ein05/zero-shot-cad-detector || true
-          git push space main --force
+          git push space hf-space:main --force
+
